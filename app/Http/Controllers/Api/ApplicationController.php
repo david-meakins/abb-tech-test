@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Enums\ApplicationStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ApplicationResource;
 use App\Models\Application;
@@ -12,13 +13,23 @@ class ApplicationController extends Controller
     /**
      * Display a listing of the resource.
      *
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
-    public function index()
+    public function index(Request $request)
     {
-        $applications = Application::orderBy('created_at')->paginate();
+        // Ideal spot for another enum here as well so that we could alternatively use: $request->enum(PlanType::class)
+        // If this was more than a code test we might return a proper error here or just ignore the invalid value
+        $request->validate([
+            'plan_type' => 'nullable|in:nbn,opticomm,mobile',
+        ]);
 
-        return ApplicationResource::collection($applications);
+        $applications = Application::orderBy('created_at');
+        if ($request->plan_type) {
+            $applications->planType($request->plan_type);
+        }
+
+        return ApplicationResource::collection($applications->paginate());
     }
 
     /**

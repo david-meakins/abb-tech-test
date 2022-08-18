@@ -4,8 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\ApplicationStatus;
 use App\Models\Application;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Foundation\Testing\WithFaker;
+use App\Models\Plan;
 use Illuminate\Testing\Fluent\AssertableJson;
 use Tests\TestCase;
 
@@ -108,4 +107,87 @@ class ApplicationControllerTest extends TestCase
                 ->etc()
             );
     }
+
+    /**
+     * Test that when we ask for a specific plan type only that type is returned
+     *
+     * @return void
+     */
+    public function test_application_by_plan_filter_doesnt_return_other_types()
+    {
+        // This could also be part of a setup / tear down for this test where we just create
+        // one application per plan type instead.
+
+        // Create one 'mobile' application
+        Application::factory()
+            ->count(1)
+            ->for(Plan::factory()->state([
+                'type' => 'mobile'
+            ]))
+            ->create();
+
+        // Create some applications that don't have the 'mobile' plan type
+        Application::factory()
+            ->count(1)
+            ->for(Plan::factory()->state([
+                'type' => 'opticomm',
+            ]))
+            ->create();
+        Application::factory()
+            ->count(1)
+            ->for(Plan::factory()->state([
+                'type' => 'nbn',
+            ]))
+            ->create();
+
+        $response = $this->getJson('/api/applications?plan_type=mobile');
+        $response->assertStatus(200)
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.plan_type', 'mobile');
+    }
+
+    /**
+     * Test that when we ask for a specific plan type only that type is returned
+     *
+     * @return void
+     */
+    public function test_application_by_plan_filter_returns_no_results_if_no_matching_types()
+    {
+        // Create some applications that don't have the 'nbn' type
+        Application::factory()
+            ->count(1)
+            ->for(Plan::factory()->state([
+                'type' => 'opticomm',
+            ]))
+            ->create();
+        Application::factory()
+            ->count(1)
+            ->for(Plan::factory()->state([
+                'type' => 'mobile',
+            ]))
+            ->create();
+
+        $response = $this->getJson('/api/applications?plan_type=nbn');
+        $response->assertStatus(200)
+            ->assertJsonCount(0, 'data');
+    }
+
+    /**
+     * See note in ApplicationController about the response
+     *
+     * @return void
+     */
+    public function test_application_by_incorrect_plan_filter_does_redirect()
+    {
+        Application::factory()
+            ->count(1)
+            ->for(Plan::factory()->state([
+                'type' => 'opticomm'
+            ]))
+            ->create();
+
+        $response = $this->getJson('/api/applications?plan_type=incorrect');
+        $response->assertStatus(422);
+    }
+
 }

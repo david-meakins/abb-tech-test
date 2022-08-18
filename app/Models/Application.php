@@ -30,4 +30,17 @@ class Application extends Model
         return $this->belongsTo(Plan::class, 'plan_id');
     }
 
+    /**
+     * Scope a query to only include Applications with a certain Plan type.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @param  mixed  $type
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopePlanType($query, $type)
+    {
+        return $query->whereRelation('plan', 'type', $type);
+    }
+
+
 }
