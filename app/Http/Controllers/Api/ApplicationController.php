@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ApplicationResource;
 use App\Models\Application;
 use Illuminate\Http\Request;
 
@@ -11,17 +12,13 @@ class ApplicationController extends Controller
     /**
      * Display a listing of the resource.
      *
-     * @return \Illuminate\Http\JsonResponse
+     * @return \Illuminate\Http\Resources\Json\AnonymousResourceCollection
      */
     public function index()
     {
-        $applications = Application::orderBy('created_at')->get();
+        $applications = Application::orderBy('created_at')->paginate();
 
-        return response()->json([
-            'status' => true,
-            'applications' => $applications
-        ]);
-
+        return ApplicationResource::collection($applications);
     }
 
     /**
