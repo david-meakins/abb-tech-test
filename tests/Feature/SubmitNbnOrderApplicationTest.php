@@ -81,15 +81,14 @@ class SubmitNbnOrderApplicationTest extends TestCase
         $sumbitJob = new SubmitNbnOrderApplication($this->application->id);
         $sumbitJob->handle();
 
-        $application = $this->application;
-        Http::assertSent(function (Request $request) use ($application) {
+        Http::assertSent(function (Request $request) {
             return $request->url() == env('NBN_B2B_ENDPOINT') &&
-                $request['address_1'] == $application->address_1 &&
-                $request['address_2'] == $application->address_2 &&
-                $request['city'] == $application->city &&
-                $request['state'] == $application->state &&
-                $request['postcode'] == $application->postcode &&
-                $request['plan_name'] == $application->plan->name;
+                $request['address_1'] == $this->application->address_1 &&
+                $request['address_2'] == $this->application->address_2 &&
+                $request['city'] == $this->application->city &&
+                $request['state'] == $this->application->state &&
+                $request['postcode'] == $this->application->postcode &&
+                $request['plan_name'] == $this->application->plan->name;
         });
     }
 
