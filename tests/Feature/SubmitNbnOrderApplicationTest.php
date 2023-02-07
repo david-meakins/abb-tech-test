@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Enums\ApplicationStatus;
 use App\Jobs\SubmitNbnOrderApplication;
-use App\Models\Application;
 use App\Models\Plan;
+use App\Models\Application;
+use App\Enums\ApplicationStatus;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Tests\TestCase;
@@ -38,12 +38,12 @@ class SubmitNbnOrderApplicationTest extends TestCase
             '*' => Http::response($successResponse),
         ]);
 
-        $sumbitJob = new SubmitNbnOrderApplication($this->application->id);
-        $sumbitJob->handle();
+        $submitJob = new SubmitNbnOrderApplication($this->application);
+        $submitJob->handle();
 
         $updatedApplication = Application::findOrFail($this->application->id);
-        $this->assertEquals($updatedApplication->order_id, 'ORD000000000000');
-        $this->assertEquals($updatedApplication->status, ApplicationStatus::Complete);
+        $this->assertEquals('ORD000000000000', $updatedApplication->order_id);
+        $this->assertEquals(ApplicationStatus::Complete, $updatedApplication->status);
     }
 
     /**
@@ -58,12 +58,12 @@ class SubmitNbnOrderApplicationTest extends TestCase
             '*' => Http::response($failResponse),
         ]);
 
-        $sumbitJob = new SubmitNbnOrderApplication($this->application->id);
+        $sumbitJob = new SubmitNbnOrderApplication($this->application);
         $sumbitJob->handle();
 
         $updatedApplication = Application::findOrFail($this->application->id);
         $this->assertNull($updatedApplication->order_id);
-        $this->assertEquals($updatedApplication->status, ApplicationStatus::OrderFailed);
+        $this->assertEquals(ApplicationStatus::OrderFailed, $updatedApplication->status);
     }
 
     /**
@@ -78,7 +78,7 @@ class SubmitNbnOrderApplicationTest extends TestCase
             '*' => Http::response($successResponse),
         ]);
 
-        $sumbitJob = new SubmitNbnOrderApplication($this->application->id);
+        $sumbitJob = new SubmitNbnOrderApplication($this->application);
         $sumbitJob->handle();
 
         Http::assertSent(function (Request $request) {
@@ -91,5 +91,4 @@ class SubmitNbnOrderApplicationTest extends TestCase
                 $request['plan_name'] == $this->application->plan->name;
         });
     }
-
 }

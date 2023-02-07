@@ -2,11 +2,10 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Enums\ApplicationStatus;
-use App\Http\Controllers\Controller;
-use App\Http\Resources\ApplicationResource;
 use App\Models\Application;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Http\Resources\ApplicationResource;
 
 class ApplicationController extends Controller
 {
@@ -25,8 +24,9 @@ class ApplicationController extends Controller
         ]);
 
         $applications = Application::orderBy('created_at');
+
         if ($request->plan_type) {
-            $applications->planType($request->plan_type);
+            $applications->hasPlanType($request->plan_type);
         }
 
         return ApplicationResource::collection($applications->paginate());

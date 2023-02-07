@@ -12,40 +12,38 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 
-class SubmitNbnOrderApplication implements ShouldQueue
+class SubmitNbnOrderApplication implements ShouldQueue, ShouldBeUnique
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     // Also being strict here and only allowing one attempt
-    public $tries = 1;
+    public int $tries = 1;
 
     protected Application $application;
 
     /**
      * Create a new job instance.
-     *
-     * @return void
      */
-    public function __construct($applicationId)
+    public function __construct($application)
     {
         // I dislike serialising objects into the queue for a couple of reasons. If you've deliberately delayed the
         // processing the object might have changed, and things get difficult to debug if you're trying to read
         // serialised objects directly from the queue. There's certainly a case for it though if you'd rather not have
         // the overhead of the DB load each time.
-        $this->application = Application::findOrFail($applicationId);
+
+        // Updated to just set the Application here because we're using the SerializesModels trait
+        $this->application = $application;
     }
 
     /**
      * Execute the job.
-     *
-     * @return void
      */
-    public function handle()
+    public function handle(): void
     {
         // In a real app we'd probably work out some sensible timeouts and retries here too in combination with the
         // number of retries this job is allowed. Probably a candidate to DI an NBN request class into this job too,
         // with some enums for success/failure response values but that's out of scope
-        $response = Http::post(env('NBN_B2B_ENDPOINT'), [
+        $response = Http::post(config('nbn.b2b_endpoint'), [
             'address_1' => $this->application->address_1,
             'address_2' => $this->application->address_2,
             'city' => $this->application->city,
@@ -64,6 +62,14 @@ class SubmitNbnOrderApplication implements ShouldQueue
             $this->application->status = ApplicationStatus::OrderFailed;
         }
         $this->application->save();
+    }
+
+    /**
+     * The unique ID of the job.
+     */
+    public function uniqueId(): string
+    {
+        return $this->application->id;
     }
 
 }

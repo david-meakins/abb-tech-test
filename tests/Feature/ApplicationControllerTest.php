@@ -2,9 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Enums\ApplicationStatus;
-use App\Models\Application;
 use App\Models\Plan;
+use App\Models\Application;
+use App\Enums\ApplicationStatus;
 use Illuminate\Testing\Fluent\AssertableJson;
 use Tests\TestCase;
 
@@ -17,8 +17,9 @@ class ApplicationControllerTest extends TestCase
      */
     public function test_index_returns_valid_json_struture()
     {
-        $response = $this->getJson('/api/applications');
+        Application::factory()->create();
 
+        $response = $this->getJson('/api/applications');
         $response
             ->assertStatus(200)
             ->assertJsonStructure([
@@ -88,8 +89,12 @@ class ApplicationControllerTest extends TestCase
         $response = $this->getJson('/api/applications');
         $response->assertStatus(200)
             ->assertJsonPath('data.0.order_id', $application->order_id)
-            ->assertJson(fn (AssertableJson $json) =>
-                $json->has('data', 1, fn ($json) =>
+            ->assertJson(
+                fn (AssertableJson $json) =>
+                $json->has(
+                    'data',
+                    1,
+                    fn ($json) =>
                     $json->hasAll([
                         'id',
                         'customer_full_name',
@@ -189,5 +194,4 @@ class ApplicationControllerTest extends TestCase
         $response = $this->getJson('/api/applications?plan_type=incorrect');
         $response->assertStatus(422);
     }
-
 }

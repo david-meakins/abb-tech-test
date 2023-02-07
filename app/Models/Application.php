@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+/**
+ * @mixin IdeHelperApplication
+ */
 class Application extends Model
 {
     use HasFactory;
@@ -33,14 +36,13 @@ class Application extends Model
     /**
      * Scope a query to only include Applications with a certain Plan type.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $query
-     * @param  mixed  $type
+     * @param \Illuminate\Database\Eloquent\Builder $query
+     * @param  string  $type
      * @return \Illuminate\Database\Eloquent\Builder
      */
-    public function scopePlanType($query, $type)
+    public function scopeHasPlanType(\Illuminate\Database\Eloquent\Builder $query, string $type): \Illuminate\Database\Eloquent\Builder
     {
         return $query->whereRelation('plan', 'type', $type);
     }
-
 
 }
